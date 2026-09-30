@@ -1,0 +1,32 @@
+# Camera Dazz
+
+Flutter 相机应用，按 `dazz相机设计文档.md` 的型号驱动结构实现。当前版本把相机型号作为资源配方：每个机型关联 LUT、示例照片、颗粒、可选边框与漏光素材。
+
+## 当前功能
+
+- 13 款机型：DCR、S 67、Classic、135 SR、D Classic、Inst C、8mm、NT16、D Exp、D Funs、DQS、Slide P、Original 等
+- 相机取景、点击对焦、前后镜头切换、闪光灯和三分法网格
+- 实时预览使用轻量色彩矩阵；拍摄成片按机型的 512×512 / 64³ LUT 做查色
+- 成片可叠加机型颗粒、随机漏光、边框和日期戳
+- 照片保存到系统相册，并可查看最近一次拍摄
+- 拍摄设置可切换边框、漏光和日期戳
+
+资源从 `文稿/camera-material/Dazz_资源` 与 `Dazz_LUT/png` 选取后复制到 `assets/dazz/`，项目构建不依赖外部文稿目录。
+
+## 运行
+
+连接 Android 或 iOS 设备后执行：
+
+```sh
+flutter pub get
+flutter run
+```
+
+首次打开时需授权相机和照片保存权限。部分模拟器没有摄像头，取景区域会显示重试提示。
+
+## 检查
+
+```sh
+dart analyze
+flutter test
+```
