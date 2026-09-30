@@ -149,25 +149,17 @@ void _applyFrames(
   Uint8List? topBytes,
   Uint8List? bottomBytes,
 ) {
-  if (topBytes == null) return;
-  final top = img.decodeImage(topBytes);
-  if (top != null) {
+  for (final bytes in [topBytes, bottomBytes]) {
+    if (bytes == null) continue;
+    final frame = img.decodeImage(bytes);
+    if (frame == null) continue;
     final resized = img.copyResize(
-      top,
+      frame,
       width: image.width,
       height: image.height,
     );
     img.compositeImage(image, resized);
   }
-  if (bottomBytes == null) return;
-  final bottom = img.decodeImage(bottomBytes);
-  if (bottom == null) return;
-  final resized = img.copyResize(
-    bottom,
-    width: image.width,
-    height: image.height,
-  );
-  img.compositeImage(image, resized);
 }
 
 void _stampDate(img.Image image) {

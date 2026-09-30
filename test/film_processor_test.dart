@@ -44,4 +44,25 @@ void main() {
       pixel.b.round(),
     ], isNot([100, 130, 160]));
   });
+
+  test('bottom frame is composited when no top frame is provided', () async {
+    final source = img.Image(width: 8, height: 8);
+    img.fill(source, color: img.ColorRgb8(30, 160, 70));
+    final bottomFrame = img.Image(width: 2, height: 2);
+    img.fill(bottomFrame, color: img.ColorRgb8(220, 35, 45));
+    final lut = await rootBundle.load('assets/dazz/lut/LookupTableDefault.png');
+
+    final output = processCameraPhoto(
+      CameraPhotoTask(
+        photoBytes: Uint8List.fromList(img.encodePng(source)),
+        lutBytes: lut.buffer.asUint8List(lut.offsetInBytes, lut.lengthInBytes),
+        frameBottomBytes: Uint8List.fromList(img.encodePng(bottomFrame)),
+      ),
+    );
+    final pixel = img.decodeJpg(output)!.getPixel(4, 4);
+
+    expect(pixel.r, greaterThan(190));
+    expect(pixel.g, lessThan(70));
+    expect(pixel.b, lessThan(75));
+  });
 }
