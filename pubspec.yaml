@@ -50,6 +50,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# Keep the iOS camera plugin compatible with the installed Xcode SDK.
+dependency_overrides:
+  camera_avfoundation:
+    path: third_party/camera_avfoundation
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
