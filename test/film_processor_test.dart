@@ -7,6 +7,16 @@ import 'package:image/image.dart' as img;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('camera catalog has a distinct bundled cover for every model', () async {
+    expect(CameraModel.models, hasLength(33));
+    final covers = CameraModel.models.map((model) => model.sampleAsset).toSet();
+    expect(covers, hasLength(CameraModel.models.length));
+
+    for (final model in CameraModel.models) {
+      await expectLater(rootBundle.load(model.sampleAsset), completes);
+    }
+  });
+
   test('identity camera LUT preserves source colors', () async {
     final source = img.Image(width: 3, height: 3);
     img.fill(source, color: img.ColorRgb8(100, 130, 160));

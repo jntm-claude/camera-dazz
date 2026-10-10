@@ -388,77 +388,93 @@ class _CameraScreenState extends State<CameraScreen>
       context: context,
       backgroundColor: _panel,
       isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * 0.86,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                '选择相机',
-                style: TextStyle(
-                  color: _cream,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '选择相机',
+                        style: TextStyle(
+                          color: _cream,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${CameraModel.models.length} 台',
+                      style: const TextStyle(
+                        color: _accent,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '选择一台相机，带上它的色彩与质感',
-                style: TextStyle(color: _muted, fontSize: 13),
-              ),
-              const SizedBox(height: 24),
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  itemCount: CameraModel.models.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.78,
+                const SizedBox(height: 4),
+                const Text(
+                  '上下滑动查看全部相机，选择它的色彩与质感',
+                  style: TextStyle(color: _muted, fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: GridView.builder(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    semanticChildCount: CameraModel.models.length,
+                    itemCount: CameraModel.models.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 0.78,
+                        ),
+                    itemBuilder: (context, index) {
+                      final model = CameraModel.models[index];
+                      return _CameraChoice(
+                        model: model,
+                        selected: _model.id == model.id,
+                        onTap: () {
+                          setState(() {
+                            _model = model;
+                            _frameEnabled = false;
+                            _dateStampEnabled = model.showDateByDefault;
+                          });
+                          final controller = _controller;
+                          if (controller != null) {
+                            unawaited(_applyCaptureRecipe(controller, model));
+                          }
+                          Navigator.of(sheetContext).pop();
+                        },
+                      );
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    final model = CameraModel.models[index];
-                    return _CameraChoice(
-                      model: model,
-                      selected: _model.id == model.id,
-                      onTap: () {
-                        setState(() {
-                          _model = model;
-                          _frameEnabled = false;
-                          _dateStampEnabled = model.showDateByDefault;
-                        });
-                        final controller = _controller;
-                        if (controller != null) {
-                          unawaited(_applyCaptureRecipe(controller, model));
-                        }
-                        Navigator.of(sheetContext).pop();
-                      },
-                    );
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
