@@ -426,7 +426,7 @@ class _CameraScreenState extends State<CameraScreen>
                     Text(
                       '${CameraModel.models.length} 台',
                       style: const TextStyle(
-                        color: _accent,
+                        color: _orange,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
