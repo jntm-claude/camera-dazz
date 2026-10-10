@@ -49,9 +49,7 @@ void main() {
   test('film profile adds lens falloff without crushing the center', () async {
     final source = img.Image(width: 101, height: 101);
     img.fill(source, color: img.ColorRgb8(160, 160, 160));
-    final lut = await rootBundle.load(
-      'assets/dazz/lut/LookupTableDefault.png',
-    );
+    final lut = await rootBundle.load('assets/dazz/lut/LookupTableDefault.png');
 
     final output = processCameraPhoto(
       CameraPhotoTask(
@@ -71,12 +69,8 @@ void main() {
   test('opaque black frame artwork is screen blended over the photo', () async {
     final source = img.Image(width: 120, height: 142);
     img.fill(source, color: img.ColorRgb8(150, 90, 60));
-    final lut = await rootBundle.load(
-      'assets/dazz/lut/LookupTableDefault.png',
-    );
-    final frame = await rootBundle.load(
-      'assets/dazz/frame/s67_frame_b_01.jpg',
-    );
+    final lut = await rootBundle.load('assets/dazz/lut/LookupTableDefault.png');
+    final frame = await rootBundle.load('assets/dazz/frame/s67_frame_b_01.jpg');
 
     final output = processCameraPhoto(
       CameraPhotoTask(
@@ -98,12 +92,8 @@ void main() {
   test('texture seed keeps a film exposure deterministic', () async {
     final source = img.Image(width: 48, height: 48);
     img.fill(source, color: img.ColorRgb8(120, 135, 150));
-    final lut = await rootBundle.load(
-      'assets/dazz/lut/LookupTableDefault.png',
-    );
-    final grain = await rootBundle.load(
-      'assets/dazz/grain/grain_s67.jpg',
-    );
+    final lut = await rootBundle.load('assets/dazz/lut/LookupTableDefault.png');
+    final grain = await rootBundle.load('assets/dazz/grain/grain_s67.jpg');
     final task = CameraPhotoTask(
       photoBytes: Uint8List.fromList(img.encodePng(source)),
       lutBytes: lut.buffer.asUint8List(lut.offsetInBytes, lut.lengthInBytes),
@@ -121,6 +111,7 @@ void main() {
   test('camera recipe assets are present in the application bundle', () async {
     for (final model in CameraModel.models) {
       await expectLater(rootBundle.load(model.lutAsset), completes);
+      await expectLater(rootBundle.load(model.sampleAsset), completes);
       for (final grainAsset in model.grainAssets) {
         await expectLater(rootBundle.load(grainAsset), completes);
       }
@@ -128,15 +119,33 @@ void main() {
       if (vignetteAsset != null) {
         await expectLater(rootBundle.load(vignetteAsset), completes);
       }
+      final frameAsset = model.frameAsset;
+      if (frameAsset != null) {
+        await expectLater(rootBundle.load(frameAsset), completes);
+      }
+      final frameBottomAsset = model.frameBottomAsset;
+      if (frameBottomAsset != null) {
+        await expectLater(rootBundle.load(frameBottomAsset), completes);
+      }
+      for (final leakAsset in model.leakAssets) {
+        await expectLater(rootBundle.load(leakAsset), completes);
+      }
     }
+  });
+
+  test('camera catalog contains 33 distinct recipes', () {
+    expect(CameraModel.models, hasLength(33));
+    expect(CameraModel.models.map((model) => model.id).toSet(), hasLength(33));
+    expect(
+      CameraModel.models.map((model) => model.lutAsset).toSet(),
+      hasLength(33),
+    );
   });
 
   test('textured vignette preserves the center and darkens the edge', () async {
     final source = img.Image(width: 101, height: 101);
     img.fill(source, color: img.ColorRgb8(170, 170, 170));
-    final lut = await rootBundle.load(
-      'assets/dazz/lut/LookupTableDefault.png',
-    );
+    final lut = await rootBundle.load('assets/dazz/lut/LookupTableDefault.png');
     final vignette = await rootBundle.load(
       'assets/dazz/vignette/vignette_dexp.jpg',
     );

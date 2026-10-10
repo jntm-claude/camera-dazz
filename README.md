@@ -4,7 +4,7 @@ Flutter 相机应用，按 `dazz相机设计文档.md` 的型号驱动结构实�
 
 ## 当前功能
 
-- 13 款机型：DCR、S 67、Classic、135 SR、D Classic、Inst C、8mm、NT16、D Exp、D Funs、DQS、Slide P、Original 等
+- 33 款机型：覆盖 DCR、Classic 系列、135 系列、拍立得、电影机、黑白、红外、玩具相机与 Original 原片等类型
 - 相机取景、点击对焦、前后镜头切换、闪光灯和三分法网格
 - 实时预览使用轻量色彩矩阵；拍摄成片按机型的 512×512 / 64³ LUT 做查色
 - 成片可叠加机型颗粒、随机漏光、边框和日期戳

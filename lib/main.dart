@@ -958,10 +958,7 @@ class _CameraFeed extends StatelessWidget {
           child: SizedBox(
             width: preview.height,
             height: preview.width,
-            child: FilmPreview(
-              model: film,
-              child: CameraPreview(controller),
-            ),
+            child: FilmPreview(model: film, child: CameraPreview(controller)),
           ),
         ),
       ),
@@ -1022,11 +1019,14 @@ class _FilmIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(8),
-    child: Image.asset(
-      film.sampleAsset,
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
+    child: ColorFiltered(
+      colorFilter: ColorFilter.matrix(film.previewMatrix),
+      child: Image.asset(
+        film.sampleAsset,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      ),
     ),
   );
 }
@@ -1063,7 +1063,10 @@ class _CameraChoice extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(model.sampleAsset, fit: BoxFit.cover),
+                ColorFiltered(
+                  colorFilter: ColorFilter.matrix(model.previewMatrix),
+                  child: Image.asset(model.sampleAsset, fit: BoxFit.cover),
+                ),
                 Positioned(
                   left: 0,
                   right: 0,
