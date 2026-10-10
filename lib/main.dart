@@ -276,8 +276,14 @@ class _CameraScreenState extends State<CameraScreen>
       final model = _model;
       final lut = await _assetBytes(model.lutAsset);
       final grain = await _assetBytes(model.grainAsset);
-      final leakPath = _lightLeaksEnabled && model.leakAssets.isNotEmpty
-          ? model.leakAssets[math.Random().nextInt(model.leakAssets.length)]
+      final textureSeed = DateTime.now().microsecondsSinceEpoch;
+      final textureRandom = math.Random(textureSeed);
+      final shouldAddLeak =
+          _lightLeaksEnabled &&
+          model.leakAssets.isNotEmpty &&
+          textureRandom.nextDouble() < model.filmProfile.leakProbability;
+      final leakPath = shouldAddLeak
+          ? model.leakAssets[textureRandom.nextInt(model.leakAssets.length)]
           : null;
       final frame = _frameEnabled ? await _assetBytes(model.frameAsset) : null;
       final frameBottom = _frameEnabled
@@ -293,6 +299,8 @@ class _CameraScreenState extends State<CameraScreen>
           frameBytes: frame,
           frameBottomBytes: frameBottom,
           stampDate: _dateStampEnabled,
+          profile: model.filmProfile,
+          textureSeed: textureSeed,
         ),
       );
       final folder = await getApplicationDocumentsDirectory();
@@ -486,7 +494,7 @@ class _CameraScreenState extends State<CameraScreen>
                 title: '随机漏光',
                 subtitle: _model.leakAssets.isEmpty
                     ? '此相机没有漏光素材'
-                    : '每张照片随机叠加一处漏光',
+                    : '按胶卷概率随机出现，位置与方向每张不同',
                 value: _lightLeaksEnabled,
                 enabled: _model.leakAssets.isNotEmpty,
                 onChanged: (value) {

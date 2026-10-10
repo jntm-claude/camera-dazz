@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'film_processor.dart';
+
 /// A virtual camera is a resource recipe, not just a color filter.
 class CameraModel {
   const CameraModel({
@@ -10,6 +12,7 @@ class CameraModel {
     required this.sampleAsset,
     required this.accent,
     required this.previewMatrix,
+    this.filmProfile = const FilmProfile(),
     this.grainAsset,
     this.frameAsset,
     this.frameBottomAsset,
@@ -28,6 +31,7 @@ class CameraModel {
   final List<String> leakAssets;
   final Color accent;
   final List<double> previewMatrix;
+  final FilmProfile filmProfile;
   final bool showDateByDefault;
 
   String? get preferredLeakAsset =>
@@ -42,6 +46,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dcr01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dcr_01.jpg',
       accent: Color(0xFFA7C5CC),
+      filmProfile: FilmProfile(
+        contrast: 0.18,
+        saturation: 1.05,
+        blackLift: 0.012,
+        highlightRolloff: 0.08,
+        warmth: -0.012,
+        grainStrength: 0.34,
+        vignetteStrength: 0.11,
+        leakStrength: 0.34,
+        leakProbability: 0.28,
+      ),
       previewMatrix: <double>[
         1.08,
         0,
@@ -80,6 +95,17 @@ class CameraModel {
       frameAsset: 'assets/dazz/frame/s67_frame_t1.png',
       frameBottomAsset: 'assets/dazz/frame/s67_frame_b_01.jpg',
       accent: Color(0xFFCBAF91),
+      filmProfile: FilmProfile(
+        contrast: 0.13,
+        saturation: 0.96,
+        blackLift: 0.028,
+        highlightRolloff: 0.18,
+        warmth: 0.022,
+        grainStrength: 0.38,
+        vignetteStrength: 0.17,
+        leakStrength: 0.32,
+        leakProbability: 0.28,
+      ),
       previewMatrix: <double>[
         1.08,
         0,
@@ -115,6 +141,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_sclassic01.jpg',
       grainAsset: 'assets/dazz/grain/grain_classicu.jpg',
       accent: Color(0xFFD2B995),
+      filmProfile: FilmProfile(
+        contrast: 0.11,
+        saturation: 0.95,
+        blackLift: 0.036,
+        highlightRolloff: 0.2,
+        warmth: 0.02,
+        grainStrength: 0.4,
+        vignetteStrength: 0.15,
+        leakStrength: 0.34,
+        leakProbability: 0.32,
+      ),
       previewMatrix: <double>[
         1.08,
         0,
@@ -152,6 +189,17 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_135sr.jpg',
       frameAsset: 'assets/dazz/frame/135ne_frame_cut1.png',
       accent: Color(0xFFD5B58E),
+      filmProfile: FilmProfile(
+        contrast: 0.17,
+        saturation: 0.98,
+        blackLift: 0.022,
+        highlightRolloff: 0.15,
+        warmth: 0.016,
+        grainStrength: 0.36,
+        vignetteStrength: 0.16,
+        leakStrength: 0.34,
+        leakProbability: 0.3,
+      ),
       previewMatrix: <double>[
         1.04,
         0,
@@ -188,6 +236,16 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_dclassic.jpg',
       frameAsset: 'assets/dazz/frame/dbalck_frame_out_01.png',
       accent: Color(0xFFB9B8B4),
+      filmProfile: FilmProfile(
+        contrast: 0.25,
+        saturation: 0,
+        blackLift: 0.025,
+        highlightRolloff: 0.2,
+        grainStrength: 0.5,
+        vignetteStrength: 0.23,
+        leakStrength: 0,
+        leakProbability: 0,
+      ),
       previewMatrix: <double>[
         0.30,
         0.59,
@@ -221,6 +279,17 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_instc.jpg',
       frameAsset: 'assets/dazz/frame/instc_frame01.png',
       accent: Color(0xFFE8DCC4),
+      filmProfile: FilmProfile(
+        contrast: 0.06,
+        saturation: 0.94,
+        blackLift: 0.045,
+        highlightRolloff: 0.24,
+        warmth: 0.028,
+        grainStrength: 0.3,
+        vignetteStrength: 0.12,
+        leakStrength: 0.38,
+        leakProbability: 0.4,
+      ),
       previewMatrix: <double>[
         1.04,
         0,
@@ -258,6 +327,17 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain8mm_01.jpg',
       frameAsset: 'assets/dazz/frame/8mm_frame1.png',
       accent: Color(0xFFD5B183),
+      filmProfile: FilmProfile(
+        contrast: 0.23,
+        saturation: 0.88,
+        blackLift: 0.04,
+        highlightRolloff: 0.2,
+        warmth: 0.024,
+        grainStrength: 0.62,
+        vignetteStrength: 0.27,
+        leakStrength: 0.46,
+        leakProbability: 0.46,
+      ),
       previewMatrix: <double>[
         1.10,
         0,
@@ -294,6 +374,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_nt16_01.jpg',
       grainAsset: 'assets/dazz/grain/grain540_01.jpg',
       accent: Color(0xFF9B8BC2),
+      filmProfile: FilmProfile(
+        contrast: 0.28,
+        saturation: 1.08,
+        blackLift: 0.015,
+        highlightRolloff: 0.12,
+        warmth: -0.018,
+        grainStrength: 0.5,
+        vignetteStrength: 0.25,
+        leakStrength: 0.4,
+        leakProbability: 0.34,
+      ),
       previewMatrix: <double>[
         1.10,
         0,
@@ -326,6 +417,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dexp_06.jpg',
       grainAsset: 'assets/dazz/grain/grain_dexp.jpg',
       accent: Color(0xFFE0A0A6),
+      filmProfile: FilmProfile(
+        contrast: 0.08,
+        saturation: 0.98,
+        blackLift: 0.04,
+        highlightRolloff: 0.34,
+        warmth: 0.022,
+        grainStrength: 0.4,
+        vignetteStrength: 0.13,
+        leakStrength: 0.5,
+        leakProbability: 0.5,
+      ),
       previewMatrix: <double>[
         1.08,
         0,
@@ -361,6 +463,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dfuns01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dfuns.jpg',
       accent: Color(0xFFF2AD87),
+      filmProfile: FilmProfile(
+        contrast: 0.18,
+        saturation: 1.08,
+        blackLift: 0.02,
+        highlightRolloff: 0.12,
+        warmth: 0.014,
+        grainStrength: 0.38,
+        vignetteStrength: 0.13,
+        leakStrength: 0.42,
+        leakProbability: 0.36,
+      ),
       previewMatrix: <double>[
         1.12,
         0,
@@ -393,6 +506,17 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dqs01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dqs.jpg',
       accent: Color(0xFFC8A888),
+      filmProfile: FilmProfile(
+        contrast: 0.1,
+        saturation: 0.97,
+        blackLift: 0.026,
+        highlightRolloff: 0.17,
+        warmth: 0.017,
+        grainStrength: 0.32,
+        vignetteStrength: 0.11,
+        leakStrength: 0.32,
+        leakProbability: 0.26,
+      ),
       previewMatrix: <double>[
         1.04,
         0,
@@ -426,6 +550,17 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_slidep.jpg',
       frameAsset: 'assets/dazz/frame/dslide_frame01.png',
       accent: Color(0xFFD7D4B0),
+      filmProfile: FilmProfile(
+        contrast: 0.26,
+        saturation: 1.14,
+        blackLift: 0.008,
+        highlightRolloff: 0.09,
+        warmth: 0.008,
+        grainStrength: 0.26,
+        vignetteStrength: 0.17,
+        leakStrength: 0.3,
+        leakProbability: 0.22,
+      ),
       previewMatrix: <double>[
         1.12,
         0,
