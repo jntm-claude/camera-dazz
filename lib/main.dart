@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -9,6 +10,7 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'camera_model.dart';
+import 'film_preview.dart';
 import 'film_processor.dart';
 
 void main() {
@@ -185,6 +187,7 @@ class _CameraScreenState extends State<CameraScreen>
           _flash = FlashMode.off;
         }
       }
+      await _applyCaptureRecipe(controller, _model);
       if (!mounted || generation != _cameraGeneration) {
         await controller.dispose();
         return;
@@ -247,6 +250,23 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
+  Future<void> _applyCaptureRecipe(
+    CameraController controller,
+    CameraModel model,
+  ) async {
+    try {
+      final minimum = await controller.getMinExposureOffset();
+      final maximum = await controller.getMaxExposureOffset();
+      final offset = model.captureExposureOffset
+          .clamp(minimum, maximum)
+          .toDouble();
+      await controller.setExposureMode(ExposureMode.auto);
+      await controller.setExposureOffset(offset);
+    } on CameraException {
+      // Fixed-exposure and front-facing cameras can reject these controls.
+    }
+  }
+
   Future<void> _focus(TapDownDetails details, Size size) async {
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
@@ -275,9 +295,14 @@ class _CameraScreenState extends State<CameraScreen>
       final source = await picture.readAsBytes();
       final model = _model;
       final lut = await _assetBytes(model.lutAsset);
-      final grain = await _assetBytes(model.grainAsset);
       final textureSeed = DateTime.now().microsecondsSinceEpoch;
       final textureRandom = math.Random(textureSeed);
+      final grainAssets = model.grainAssets;
+      final grainPath = grainAssets.isEmpty
+          ? null
+          : grainAssets[textureRandom.nextInt(grainAssets.length)];
+      final grain = await _assetBytes(grainPath);
+      final vignette = await _assetBytes(model.vignetteAsset);
       final shouldAddLeak =
           _lightLeaksEnabled &&
           model.leakAssets.isNotEmpty &&
@@ -296,6 +321,7 @@ class _CameraScreenState extends State<CameraScreen>
           lutBytes: lut!,
           grainBytes: grain,
           leakBytes: leakPath == null ? null : await _assetBytes(leakPath),
+          vignetteBytes: vignette,
           frameBytes: frame,
           frameBottomBytes: frameBottom,
           stampDate: _dateStampEnabled,
@@ -422,6 +448,10 @@ class _CameraScreenState extends State<CameraScreen>
                           _frameEnabled = false;
                           _dateStampEnabled = model.showDateByDefault;
                         });
+                        final controller = _controller;
+                        if (controller != null) {
+                          unawaited(_applyCaptureRecipe(controller, model));
+                        }
                         Navigator.of(sheetContext).pop();
                       },
                     );
@@ -928,8 +958,8 @@ class _CameraFeed extends StatelessWidget {
           child: SizedBox(
             width: preview.height,
             height: preview.width,
-            child: ColorFiltered(
-              colorFilter: ColorFilter.matrix(film.previewMatrix),
+            child: FilmPreview(
+              model: film,
               child: CameraPreview(controller),
             ),
           ),

@@ -1,0 +1,24 @@
+# Dazz research assets
+
+The files in this directory were collected from the offline Dazz Camera 2.6.9
+analysis described in `dazz相机设计文档.md`. They are used to reproduce and
+measure rendering behavior during development.
+
+## Release status
+
+The original application's asset license has not been established. Treat every
+LUT, sample image, grain texture, light leak, frame, and vignette in this
+directory as **research-only**. They must not be included in a public or
+commercial release without written permission from the rights holder.
+
+Before release:
+
+1. Replace each visual file with an internally produced or explicitly licensed
+   equivalent.
+2. Preserve the filenames or update the corresponding `CameraModel` recipe.
+3. Record the creator, license, source file, and approval date in an asset
+   manifest.
+4. Run the recipe asset test and visual baselines after replacement.
+
+The rendering code and numeric camera recipes can remain; this release gate
+applies to the visual files themselves.

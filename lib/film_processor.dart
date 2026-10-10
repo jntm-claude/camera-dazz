@@ -40,6 +40,7 @@ class CameraPhotoTask {
     required this.lutBytes,
     this.grainBytes,
     this.leakBytes,
+    this.vignetteBytes,
     this.frameBytes,
     this.frameBottomBytes,
     this.stampDate = false,
@@ -51,6 +52,7 @@ class CameraPhotoTask {
   final Uint8List lutBytes;
   final Uint8List? grainBytes;
   final Uint8List? leakBytes;
+  final Uint8List? vignetteBytes;
   final Uint8List? frameBytes;
   final Uint8List? frameBottomBytes;
   final bool stampDate;
@@ -71,7 +73,12 @@ Uint8List processCameraPhoto(CameraPhotoTask task) {
   }
   final image = img.bakeOrientation(photo);
   final lut = _readLut(lutImage);
-  _applyLutAndFilmResponse(image, lut, task.profile);
+  _applyLutAndFilmResponse(
+    image,
+    lut,
+    task.profile,
+    useProceduralVignette: task.vignetteBytes == null,
+  );
   final random = math.Random(task.textureSeed);
 
   final grainBytes = task.grainBytes;
@@ -86,6 +93,17 @@ Uint8List processCameraPhoto(CameraPhotoTask task) {
     final leak = img.decodeImage(leakBytes);
     if (leak != null) {
       _blendLeak(image, leak, task.profile.leakStrength, random);
+    }
+  }
+  final vignetteBytes = task.vignetteBytes;
+  if (vignetteBytes != null && task.profile.vignetteStrength > 0) {
+    final vignette = img.decodeImage(vignetteBytes);
+    if (vignette != null) {
+      _blendVignetteTexture(
+        image,
+        vignette,
+        task.profile.vignetteStrength,
+      );
     }
   }
   _applyFrames(image, task.frameBytes, task.frameBottomBytes);
@@ -118,13 +136,17 @@ Uint8List _readLut(img.Image tiled) {
 void _applyLutAndFilmResponse(
   img.Image image,
   Uint8List cube,
-  FilmProfile profile,
-) {
+  FilmProfile profile, {
+  required bool useProceduralVignette,
+}) {
   const edge = 64;
   const plane = edge * edge;
   final widthScale = math.max(1, image.width - 1);
   final heightScale = math.max(1, image.height - 1);
   final lutStrength = _clamp01(profile.lutStrength);
+  final vignetteStrength = useProceduralVignette
+      ? profile.vignetteStrength.clamp(0.0, 0.8).toDouble()
+      : 0.0;
   final responseCurve = Float64List(256);
   for (var value = 0; value < responseCurve.length; value++) {
     responseCurve[value] = _filmCurve(value / 255, profile);
@@ -189,7 +211,7 @@ void _applyLutAndFilmResponse(
     final ny = (pixel.y / heightScale - 0.5) * 2;
     final radiusSquared = (nx * nx + ny * ny) / 2;
     final vignette = _smoothstep(0.43 * 0.43, 1, radiusSquared) *
-        profile.vignetteStrength.clamp(0, 0.8);
+        vignetteStrength;
     final edgeFalloff = 1 - vignette;
 
     pixel
@@ -327,6 +349,71 @@ void _blendLeak(
       ..g = _screen(pixel.g, light.g.toInt(), opacity)
       ..b = _screen(pixel.b, light.b.toInt(), opacity);
   }
+}
+
+void _blendVignetteTexture(
+  img.Image image,
+  img.Image vignette,
+  double strength,
+) {
+  final reference = _centerColor(vignette);
+  final scale = math.max(
+    image.width / vignette.width,
+    image.height / vignette.height,
+  );
+  final visibleWidth = image.width / scale;
+  final visibleHeight = image.height / scale;
+  final cropX = (vignette.width - visibleWidth) / 2;
+  final cropY = (vignette.height - visibleHeight) / 2;
+
+  for (final pixel in image) {
+    final vx = (cropX + pixel.x / scale)
+        .floor()
+        .clamp(0, vignette.width - 1)
+        .toInt();
+    final vy = (cropY + pixel.y / scale)
+        .floor()
+        .clamp(0, vignette.height - 1)
+        .toInt();
+    final texture = vignette.getPixel(vx, vy);
+    final redFactor = _textureFactor(texture.r, reference.$1, strength);
+    final greenFactor = _textureFactor(texture.g, reference.$2, strength);
+    final blueFactor = _textureFactor(texture.b, reference.$3, strength);
+    pixel
+      ..r = (pixel.r * redFactor).round().clamp(0, 255)
+      ..g = (pixel.g * greenFactor).round().clamp(0, 255)
+      ..b = (pixel.b * blueFactor).round().clamp(0, 255);
+  }
+}
+
+(double, double, double) _centerColor(img.Image texture) {
+  final left = (texture.width * 0.45).floor();
+  final right = math.max(left + 1, (texture.width * 0.55).ceil());
+  final top = (texture.height * 0.45).floor();
+  final bottom = math.max(top + 1, (texture.height * 0.55).ceil());
+  var red = 0.0;
+  var green = 0.0;
+  var blue = 0.0;
+  var count = 0;
+  for (var y = top; y < bottom; y += 2) {
+    for (var x = left; x < right; x += 2) {
+      final pixel = texture.getPixel(x, y);
+      red += pixel.r;
+      green += pixel.g;
+      blue += pixel.b;
+      count++;
+    }
+  }
+  return (
+    math.max(1.0, red / count).toDouble(),
+    math.max(1.0, green / count).toDouble(),
+    math.max(1.0, blue / count).toDouble(),
+  );
+}
+
+double _textureFactor(num value, double reference, double strength) {
+  final relative = value / reference;
+  return (1 + (relative - 1) * strength).clamp(0.35, 1.25).toDouble();
 }
 
 int _screen(num base, num light, double opacity) {

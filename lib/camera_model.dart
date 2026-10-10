@@ -13,7 +13,10 @@ class CameraModel {
     required this.accent,
     required this.previewMatrix,
     this.filmProfile = const FilmProfile(),
+    this.captureExposureOffset = 0,
     this.grainAsset,
+    this.grainVariants = const [],
+    this.vignetteAsset,
     this.frameAsset,
     this.frameBottomAsset,
     this.leakAssets = const [],
@@ -26,16 +29,24 @@ class CameraModel {
   final String lutAsset;
   final String sampleAsset;
   final String? grainAsset;
+  final List<String> grainVariants;
+  final String? vignetteAsset;
   final String? frameAsset;
   final String? frameBottomAsset;
   final List<String> leakAssets;
   final Color accent;
   final List<double> previewMatrix;
   final FilmProfile filmProfile;
+  final double captureExposureOffset;
   final bool showDateByDefault;
 
   String? get preferredLeakAsset =>
       leakAssets.isEmpty ? null : leakAssets.first;
+
+  List<String> get grainAssets => <String>[
+    if (grainAsset != null) grainAsset!,
+    ...grainVariants,
+  ];
 
   static const models = <CameraModel>[
     CameraModel(
@@ -45,7 +56,14 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/lookup_dcr.png',
       sampleAsset: 'assets/dazz/sample/img_dcr01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dcr_01.jpg',
+      grainVariants: <String>[
+        'assets/dazz/grain/grain_dcr_02.jpg',
+        'assets/dazz/grain/grain_dcr_03.jpg',
+        'assets/dazz/grain/grain_dcr_04.jpg',
+        'assets/dazz/grain/grain_dcr_05.jpg',
+      ],
       accent: Color(0xFFA7C5CC),
+      captureExposureOffset: -0.1,
       filmProfile: FilmProfile(
         contrast: 0.18,
         saturation: 1.05,
@@ -95,6 +113,7 @@ class CameraModel {
       frameAsset: 'assets/dazz/frame/s67_frame_t1.png',
       frameBottomAsset: 'assets/dazz/frame/s67_frame_b_01.jpg',
       accent: Color(0xFFCBAF91),
+      captureExposureOffset: -0.2,
       filmProfile: FilmProfile(
         contrast: 0.13,
         saturation: 0.96,
@@ -140,7 +159,9 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/lookup_classic.png',
       sampleAsset: 'assets/dazz/sample/img_sclassic01.jpg',
       grainAsset: 'assets/dazz/grain/grain_classicu.jpg',
+      vignetteAsset: 'assets/dazz/vignette/sclassic_vintage.jpg',
       accent: Color(0xFFD2B995),
+      captureExposureOffset: -0.25,
       filmProfile: FilmProfile(
         contrast: 0.11,
         saturation: 0.95,
@@ -189,6 +210,7 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_135sr.jpg',
       frameAsset: 'assets/dazz/frame/135ne_frame_cut1.png',
       accent: Color(0xFFD5B58E),
+      captureExposureOffset: -0.25,
       filmProfile: FilmProfile(
         contrast: 0.17,
         saturation: 0.98,
@@ -234,8 +256,10 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/lookup_dblack_1.png',
       sampleAsset: 'assets/dazz/sample/img_dblack01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dclassic.jpg',
+      vignetteAsset: 'assets/dazz/vignette/vignette_dclassic.jpg',
       frameAsset: 'assets/dazz/frame/dbalck_frame_out_01.png',
       accent: Color(0xFFB9B8B4),
+      captureExposureOffset: -0.15,
       filmProfile: FilmProfile(
         contrast: 0.25,
         saturation: 0,
@@ -279,6 +303,7 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_instc.jpg',
       frameAsset: 'assets/dazz/frame/instc_frame01.png',
       accent: Color(0xFFE8DCC4),
+      captureExposureOffset: 0.1,
       filmProfile: FilmProfile(
         contrast: 0.06,
         saturation: 0.94,
@@ -325,8 +350,20 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/8mm_lookup.png',
       sampleAsset: 'assets/dazz/sample/img_8mm01.jpg',
       grainAsset: 'assets/dazz/grain/grain8mm_01.jpg',
+      grainVariants: <String>[
+        'assets/dazz/grain/grain8mm_02.jpg',
+        'assets/dazz/grain/grain8mm_03.jpg',
+        'assets/dazz/grain/grain8mm_04.jpg',
+        'assets/dazz/grain/grain8mm_05.jpg',
+        'assets/dazz/grain/grain8mm_06.jpg',
+        'assets/dazz/grain/grain8mm_07.jpg',
+        'assets/dazz/grain/grain8mm_08.jpg',
+        'assets/dazz/grain/grain8mm_09.jpg',
+        'assets/dazz/grain/grain8mm_10.jpg',
+      ],
       frameAsset: 'assets/dazz/frame/8mm_frame1.png',
       accent: Color(0xFFD5B183),
+      captureExposureOffset: -0.35,
       filmProfile: FilmProfile(
         contrast: 0.23,
         saturation: 0.88,
@@ -373,7 +410,20 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/lookup_nt16.png',
       sampleAsset: 'assets/dazz/sample/img_nt16_01.jpg',
       grainAsset: 'assets/dazz/grain/grain540_01.jpg',
+      grainVariants: <String>[
+        'assets/dazz/grain/grain540_02.jpg',
+        'assets/dazz/grain/grain540_03.jpg',
+        'assets/dazz/grain/grain540_04.jpg',
+        'assets/dazz/grain/grain540_05.jpg',
+        'assets/dazz/grain/grain540_06.jpg',
+        'assets/dazz/grain/grain540_07.jpg',
+        'assets/dazz/grain/grain540_08.jpg',
+        'assets/dazz/grain/grain540_09.jpg',
+        'assets/dazz/grain/grain540_10.jpg',
+      ],
+      vignetteAsset: 'assets/dazz/vignette/vignette_nt16.jpg',
       accent: Color(0xFF9B8BC2),
+      captureExposureOffset: -0.45,
       filmProfile: FilmProfile(
         contrast: 0.28,
         saturation: 1.08,
@@ -416,7 +466,9 @@ class CameraModel {
       lutAsset: 'assets/dazz/lut/lookup_dexp.png',
       sampleAsset: 'assets/dazz/sample/img_dexp_06.jpg',
       grainAsset: 'assets/dazz/grain/grain_dexp.jpg',
+      vignetteAsset: 'assets/dazz/vignette/vignette_dexp.jpg',
       accent: Color(0xFFE0A0A6),
+      captureExposureOffset: 0.25,
       filmProfile: FilmProfile(
         contrast: 0.08,
         saturation: 0.98,
@@ -463,6 +515,7 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dfuns01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dfuns.jpg',
       accent: Color(0xFFF2AD87),
+      captureExposureOffset: 0.05,
       filmProfile: FilmProfile(
         contrast: 0.18,
         saturation: 1.08,
@@ -506,6 +559,7 @@ class CameraModel {
       sampleAsset: 'assets/dazz/sample/img_dqs01.jpg',
       grainAsset: 'assets/dazz/grain/grain_dqs.jpg',
       accent: Color(0xFFC8A888),
+      captureExposureOffset: -0.1,
       filmProfile: FilmProfile(
         contrast: 0.1,
         saturation: 0.97,
@@ -550,6 +604,7 @@ class CameraModel {
       grainAsset: 'assets/dazz/grain/grain_slidep.jpg',
       frameAsset: 'assets/dazz/frame/dslide_frame01.png',
       accent: Color(0xFFD7D4B0),
+      captureExposureOffset: -0.35,
       filmProfile: FilmProfile(
         contrast: 0.26,
         saturation: 1.14,
