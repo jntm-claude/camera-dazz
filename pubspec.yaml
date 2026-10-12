@@ -60,12 +60,16 @@ dependency_overrides:
 
 # The following section is specific to Flutter packages.
 flutter:
+  shaders:
+    - shaders/film_preview.frag
+
   assets:
     - assets/dazz/lut/
     - assets/dazz/sample/
     - assets/dazz/grain/
     - assets/dazz/frame/
     - assets/dazz/leak/
+    - assets/dazz/vignette/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

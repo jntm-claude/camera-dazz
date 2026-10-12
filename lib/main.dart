@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -9,6 +10,7 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'camera_model.dart';
+import 'film_preview.dart';
 import 'film_processor.dart';
 
 void main() {
@@ -185,6 +187,7 @@ class _CameraScreenState extends State<CameraScreen>
           _flash = FlashMode.off;
         }
       }
+      await _applyCaptureRecipe(controller, _model);
       if (!mounted || generation != _cameraGeneration) {
         await controller.dispose();
         return;
@@ -247,6 +250,23 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
+  Future<void> _applyCaptureRecipe(
+    CameraController controller,
+    CameraModel model,
+  ) async {
+    try {
+      final minimum = await controller.getMinExposureOffset();
+      final maximum = await controller.getMaxExposureOffset();
+      final offset = model.captureExposureOffset
+          .clamp(minimum, maximum)
+          .toDouble();
+      await controller.setExposureMode(ExposureMode.auto);
+      await controller.setExposureOffset(offset);
+    } on CameraException {
+      // Fixed-exposure and front-facing cameras can reject these controls.
+    }
+  }
+
   Future<void> _focus(TapDownDetails details, Size size) async {
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
@@ -275,9 +295,20 @@ class _CameraScreenState extends State<CameraScreen>
       final source = await picture.readAsBytes();
       final model = _model;
       final lut = await _assetBytes(model.lutAsset);
-      final grain = await _assetBytes(model.grainAsset);
-      final leakPath = _lightLeaksEnabled && model.leakAssets.isNotEmpty
-          ? model.leakAssets[math.Random().nextInt(model.leakAssets.length)]
+      final textureSeed = DateTime.now().microsecondsSinceEpoch;
+      final textureRandom = math.Random(textureSeed);
+      final grainAssets = model.grainAssets;
+      final grainPath = grainAssets.isEmpty
+          ? null
+          : grainAssets[textureRandom.nextInt(grainAssets.length)];
+      final grain = await _assetBytes(grainPath);
+      final vignette = await _assetBytes(model.vignetteAsset);
+      final shouldAddLeak =
+          _lightLeaksEnabled &&
+          model.leakAssets.isNotEmpty &&
+          textureRandom.nextDouble() < model.filmProfile.leakProbability;
+      final leakPath = shouldAddLeak
+          ? model.leakAssets[textureRandom.nextInt(model.leakAssets.length)]
           : null;
       final frame = _frameEnabled ? await _assetBytes(model.frameAsset) : null;
       final frameBottom = _frameEnabled
@@ -290,9 +321,12 @@ class _CameraScreenState extends State<CameraScreen>
           lutBytes: lut!,
           grainBytes: grain,
           leakBytes: leakPath == null ? null : await _assetBytes(leakPath),
+          vignetteBytes: vignette,
           frameBytes: frame,
           frameBottomBytes: frameBottom,
           stampDate: _dateStampEnabled,
+          profile: model.filmProfile,
+          textureSeed: textureSeed,
         ),
       );
       final folder = await getApplicationDocumentsDirectory();
@@ -354,73 +388,93 @@ class _CameraScreenState extends State<CameraScreen>
       context: context,
       backgroundColor: _panel,
       isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * 0.86,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                '选择相机',
-                style: TextStyle(
-                  color: _cream,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '选择相机',
+                        style: TextStyle(
+                          color: _cream,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${CameraModel.models.length} 台',
+                      style: const TextStyle(
+                        color: _orange,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '选择一台相机，带上它的色彩与质感',
-                style: TextStyle(color: _muted, fontSize: 13),
-              ),
-              const SizedBox(height: 24),
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  itemCount: CameraModel.models.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.78,
+                const SizedBox(height: 4),
+                const Text(
+                  '上下滑动查看全部相机，选择它的色彩与质感',
+                  style: TextStyle(color: _muted, fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: GridView.builder(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    semanticChildCount: CameraModel.models.length,
+                    itemCount: CameraModel.models.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 0.78,
+                        ),
+                    itemBuilder: (context, index) {
+                      final model = CameraModel.models[index];
+                      return _CameraChoice(
+                        model: model,
+                        selected: _model.id == model.id,
+                        onTap: () {
+                          setState(() {
+                            _model = model;
+                            _frameEnabled = false;
+                            _dateStampEnabled = model.showDateByDefault;
+                          });
+                          final controller = _controller;
+                          if (controller != null) {
+                            unawaited(_applyCaptureRecipe(controller, model));
+                          }
+                          Navigator.of(sheetContext).pop();
+                        },
+                      );
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    final model = CameraModel.models[index];
-                    return _CameraChoice(
-                      model: model,
-                      selected: _model.id == model.id,
-                      onTap: () {
-                        setState(() {
-                          _model = model;
-                          _frameEnabled = false;
-                          _dateStampEnabled = model.showDateByDefault;
-                        });
-                        Navigator.of(sheetContext).pop();
-                      },
-                    );
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -486,7 +540,7 @@ class _CameraScreenState extends State<CameraScreen>
                 title: '随机漏光',
                 subtitle: _model.leakAssets.isEmpty
                     ? '此相机没有漏光素材'
-                    : '每张照片随机叠加一处漏光',
+                    : '按胶卷概率随机出现，位置与方向每张不同',
                 value: _lightLeaksEnabled,
                 enabled: _model.leakAssets.isNotEmpty,
                 onChanged: (value) {
@@ -920,10 +974,7 @@ class _CameraFeed extends StatelessWidget {
           child: SizedBox(
             width: preview.height,
             height: preview.width,
-            child: ColorFiltered(
-              colorFilter: ColorFilter.matrix(film.previewMatrix),
-              child: CameraPreview(controller),
-            ),
+            child: FilmPreview(model: film, child: CameraPreview(controller)),
           ),
         ),
       ),
@@ -984,11 +1035,14 @@ class _FilmIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(8),
-    child: Image.asset(
-      film.sampleAsset,
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
+    child: ColorFiltered(
+      colorFilter: ColorFilter.matrix(film.previewMatrix),
+      child: Image.asset(
+        film.sampleAsset,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      ),
     ),
   );
 }
@@ -1025,7 +1079,10 @@ class _CameraChoice extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(model.sampleAsset, fit: BoxFit.cover),
+                ColorFiltered(
+                  colorFilter: ColorFilter.matrix(model.previewMatrix),
+                  child: Image.asset(model.sampleAsset, fit: BoxFit.cover),
+                ),
                 Positioned(
                   left: 0,
                   right: 0,
